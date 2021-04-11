@@ -17,7 +17,6 @@ module instr_mem_tlul
   logic        rvalid; 
   logic [3:0]  data_we;
 
-
   always_ff @(posedge clk_i) begin
     if (!rst_ni) begin
       instr_valid <= 1'b0;

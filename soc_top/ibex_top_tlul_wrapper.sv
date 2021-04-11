@@ -21,8 +21,8 @@ module ibex_top_tlul_wrapper #(
     parameter int unsigned        DmExceptionAddr  = 0
 )
 (
-  input clock,
-  input reset,
+  input clk_i,
+  input rst_ni,
 
   // instruction memory interface 
   input  tlul_pkg::tl_d2h_t tl_i_i,
@@ -41,8 +41,6 @@ module ibex_top_tlul_wrapper #(
   input  logic        irq_external_i,
   input  logic [14:0] irq_fast_i,
   input  logic        irq_nm_i,       // non-maskeable interrupt
-  // Debug Interface
-  input  logic        debug_req_i,
 
   // CPU Control Signals
   input  logic        fetch_enable_i,
@@ -95,7 +93,7 @@ ibex_core #(
     .DmExceptionAddr  (DmExceptionAddr) 
 ) u_core (
     // Clock and Reset
-    .clk_i (clock),
+    .clk_i (clk_i),
     .rst_ni(rst_ni),
 
     .test_en_i (test_en_i),     // enable all clock gates for testing
@@ -130,7 +128,7 @@ ibex_core #(
     .irq_nm_i       (irq_nm_i),       // non-maskeable interrupt
 
     // Debug Interface
-    .debug_req_i    (debug_req_i),
+    .debug_req_i    (1'b0),
 
     // RISC-V Formal Interface
     // Does not comply with the coding standards of _i/_o suffixes, but follows
@@ -163,45 +161,49 @@ ibex_core #(
 
     // CPU Control Signals
     .fetch_enable_i (fetch_enable_i),
-    .alert_minor_o (alert_minor_o),
-    .alert_major_o (alert_major_o),
-    .core_sleep_o (core_sleep_o)
+    .alert_minor_o  (alert_minor_o),
+    .alert_major_o  (alert_major_o),
+    .core_sleep_o   (core_sleep_o)
 );
 
 tlul_adapter_host #(
     .MAX_REQS(2)
 ) intr_interface (
-    .clock (clock),
-    .reset (reset),
-    .req_i (instr_req),
-    .gnt_o (instr_gnt),
-    .addr_i (instr_addr),
-    .we_i (1'b0),
-    .wdata_i (32'b0),
-    .be_i (4'hF),
-    .valid_o (instr_rvalid),
-    .rdata_o (instr_rdata),
-    .err_o (instr_err),
-    .tl_h_c_a (tl_i_o),
-    .tl_h_c_d (tl_i_i)
+    .clk_i      (clk_i),
+    .rst_ni     (rst_ni),
+    .req_i      (instr_req),
+    .gnt_o      (instr_gnt),
+    .addr_i     (instr_addr),
+    .we_i       (1'b0),
+    .wdata_i    (32'b0),
+    .be_i       (4'hF),
+    .type_i     (InstrType),
+    .valid_o    (instr_rvalid),
+    .rdata_o    (instr_rdata),
+    .err_o      (instr_err),
+    .intg_err_o (),
+    .tl_h_c_a   (tl_i_o),
+    .tl_h_c_d   (tl_i_i)
 );
 
 tlul_adapter_host #(
     .MAX_REQS (2)
 ) data_interface (
-    .clock (clock),
-    .reset (reset),
-    .req_i (data_req),
-    .gnt_o (data_gnt),
-    .addr_i (data_addr),
-    .we_i (data_we),
-    .wdata_i (data_wdata),
-    .be_i (data_be),
-    .valid_o (data_rvalid),
-    .rdata_o (data_rdata),
-    .err_o (data_err),
-    .tl_h_c_a (tl_d_o),
-    .tl_h_c_d (tl_d_i)
+    .clk_i      (clk_i),
+    .rst_ni     (rst_ni),
+    .req_i      (data_req),
+    .gnt_o      (data_gnt),
+    .addr_i     (data_addr),
+    .we_i       (data_we),
+    .wdata_i    (data_wdata),
+    .be_i       (data_be),
+    .type_i     (DataType),
+    .valid_o    (data_rvalid),
+    .rdata_o    (data_rdata),
+    .err_o      (data_err),
+    .intg_err_o (),
+    .tl_h_c_a   (tl_d_o),
+    .tl_h_c_d   (tl_d_i)
 );
 
 endmodule

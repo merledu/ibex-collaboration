@@ -31,7 +31,6 @@ module data_mem
   assign data_we[3:2] = (wmask[31:24] != 8'd0) ? 2'b11: 2'b00; 
   
 DFFRAMD dccm (
-
     .CLK    (clk_i  ),
     .EN     (req    ),   // chip enable
     .WE     (data_we),   // write mask
@@ -62,7 +61,6 @@ tlul_sram_adapter #(
     .rdata_i  (rdata       ),
     .rvalid_i (rvalid      ),
     .rerror_i (2'b0        )
-
 );
 
 endmodule

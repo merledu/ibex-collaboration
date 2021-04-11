@@ -1,6 +1,6 @@
  
 module azadi_soc_top(
-  input clock,
+  input clk_i,
   input rst_ni,
 
   input  logic [19:0] gpio_i,
@@ -14,7 +14,7 @@ module azadi_soc_top(
   assign gpio_in = gpio_i;
   assign gpio_o = gpio_out; 
         
-  tlul_pkg::tl_h2d_t ifu_to_xbar;
+  tlul_pkg::tl_h2d_t ifu_to_xbar; 
   tlul_pkg::tl_d2h_t xbar_to_ifu;
 
   tlul_pkg::tl_h2d_t xbar_to_iccm;
@@ -90,8 +90,8 @@ module azadi_soc_top(
       .DmHaltAddr       (), 
       .DmExceptionAddr  () 
   ) u_top (
-      .clock (clock),
-      .reset (rst_ni),
+      .clk_i  (clk_i),
+      .rst_ni (rst_ni),
 
       // instruction memory interface 
       .tl_i_i (xbar_to_ifu),
@@ -113,9 +113,6 @@ module azadi_soc_top(
       .irq_fast_i     (1'b0),
       .irq_nm_i       (1'b0),       // non-maskeable interrupt
 
-      // Debug Interface
-      .debug_req_i    (),
-
       // CPU Control Signals
       .fetch_enable_i (1'b1),
       .alert_minor_o  (),
@@ -125,69 +122,71 @@ module azadi_soc_top(
 
   //peripheral xbar
   xbar_periph periph_switch (
-    .clk_peri_i         (clock),
-    .rst_peri_ni        (rst_ni),
+    .clk_i     (clk_i),
+    .rst_ni    (rst_ni),
 
     /* Host interfaces */
-    .tl_if_i            (), 
-    .tl_if_o            (), 
-    .tl_lsu_i           (),
-    .tl_lsu_o           (),
+    .tl_if_i   (ifu_to_xbar), 
+    .tl_if_o   (xbar_to_ifu), 
+    .tl_lsu_i  (lsu_to_xbar),
+    .tl_lsu_o  (xbar_to_lsu),
 
     /* Device interfaces */
 
     // GPIOs
-    .tl_gpio_o          (xbarp_to_gpio),
-    .tl_gpio_i          (gpio_to_xbarp),
+    .tl_gpio_o  (xbarp_to_gpio),
+    .tl_gpio_i  (gpio_to_xbarp),
 
     // LDO 1
-    .tl_ldo1_o          ( ),
-    .tl_ldo1_i          ( ),
+    .tl_ldo1_o  (),
+    .tl_ldo1_i  (),
 
     // LDO 2
-    .tl_ldo2_o          ( ),
-    .tl_ldo2_i          ( ),
+    .tl_ldo2_o  (),
+    .tl_ldo2_i  (),
 
     // DCDC
-    .tl_dcdc_o          ( ),
-    .tl_dcdc_o          ( ),
+    .tl_dcdc_o  (),
+    .tl_dcdc_o  (),
 
     // PLL 1
-    .tl_pll1_o          ( ),
-    .tl_pll1_i          ( ),
+    .tl_pll1_o  (),
+    .tl_pll1_i  (),
 
     // Temp. Sensor 1
-    .tl_tmp_sens1_o     ( ),
-    .tl_tmp_sens1_i     ( ),
+    .tl_tmp_sens1_o  (),
+    .tl_tmp_sens1_i  (),
 
     // Temp. Sensor 2
-    .tl_tmp_sens2_o     ( ),
-    .tl_tmp_sens2_i     ( ),
+    .tl_tmp_sens2_o  (),
+    .tl_tmp_sens2_i  (),
   
     // DAP
-    .tl_dap_o           ( ),
-    .tl_dap_i           ( )
+    .tl_dap_o         (),
+    .tl_dap_i         (),
+
+    // PLIC
+    .tl_plic_o  (plic_req),
+    .tl_plic_i  (plic_resp)
   );
 
   //GPIO module
    gpio gpio_32 (
-    .clk_i          (clock),
-    .rst_ni         (rst_ni),
+    .clk_i         (clk_i),
+    .rst_ni        (rst_ni),
 
     // Below Regster interface can be changed
-    .tl_i           (xbarp_to_gpio),
-    .tl_o           (gpio_to_xbarp),
-
-    .cio_gpio_i     (gpio_in),
-    .cio_gpio_o     (gpio_out),
-    .cio_gpio_en_o  (),
-
-    .intr_gpio_o    (intr_gpio )  
+    .tl_i          (xbarp_to_gpio),
+    .tl_o          (gpio_to_xbarp),
+    .cio_gpio_i    (gpio_in),
+    .cio_gpio_o    (gpio_out),
+    .cio_gpio_en_o (),
+    .intr_gpio_o   (intr_gpio )  
   );
 
   instr_mem_tlul iccm (
-    .clock      (clock),
-    .reset      (rst_ni),
+    .clk_i    (clk_i),
+    .rst_ni   (rst_ni),
 
     // tl-ul insterface
     .tl_d_i   (xbar_to_iccm),
@@ -195,8 +194,8 @@ module azadi_soc_top(
   );
 
   data_mem_tlul dccm(
-    .clock    (clock),
-    .reset    (rst_ni),
+    .clk_i    (clk_i),
+    .rst_ni   (rst_ni),
   
     // tl-ul insterface
     .tl_d_i   (xbar_to_dccm),
@@ -204,21 +203,21 @@ module azadi_soc_top(
   );
 
   rv_plic intr_controller (
-    .clk_i(clock),
-    .rst_ni(rst_ni),
+    .clk_i      (clk_i),
+    .rst_ni     (rst_ni),
 
     // Bus Interface (device)
-    .tl_i (plic_req),
-    .tl_o (plic_resp),
+    .tl_i       (plic_req),
+    .tl_o       (plic_resp),
 
     // Interrupt Sources
     .intr_src_i (intr_vector),
 
     // Interrupt notification to targets
-    .irq_o (intr_req),
-    .irq_id_o(),
+    .irq_o      (intr_req),
+    .irq_id_o   (),
 
-    .msip_o()
+    .msip_o     ()
   );
 
 endmodule
