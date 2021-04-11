@@ -1,5 +1,3 @@
-//`include "/home/usman/Documents/ibex/rtl/ibex_pkg.sv"
-//`include "/home/merl/Documents/ibex/rtl/prim_pkg.sv"
 
 module ibex_top_tlul_wrapper #(
     parameter bit                 PMPEnable        = 1'b0,
@@ -27,37 +25,34 @@ module ibex_top_tlul_wrapper #(
   input reset,
 
   // instruction memory interface 
-    input tlul_pkg::tl_d2h_t tl_i_i,
-    output tlul_pkg::tl_h2d_t tl_i_o,
+  input  tlul_pkg::tl_d2h_t tl_i_i,
+  output tlul_pkg::tl_h2d_t tl_i_o,
 
   // data memory interface 
-    input tlul_pkg::tl_d2h_t tl_d_i,
-    output tlul_pkg::tl_h2d_t tl_d_o,
+  input  tlul_pkg::tl_d2h_t tl_d_i,
+  output tlul_pkg::tl_h2d_t tl_d_o,
+  input  logic              test_en_i,     // enable all clock gates for testing
+  input  logic [31:0]       hart_id_i,
+  input  logic [31:0]       boot_addr_i,
+  
+  // Interrupt inputs
+  input  logic        irq_software_i,
+  input  logic        irq_timer_i,
+  input  logic        irq_external_i,
+  input  logic [14:0] irq_fast_i,
+  input  logic        irq_nm_i,       // non-maskeable interrupt
+  // Debug Interface
+  input  logic        debug_req_i,
 
-    input  logic        test_en_i,     // enable all clock gates for testing
-
-    input  logic [31:0] hart_id_i,
-    input  logic [31:0] boot_addr_i,
-
-        // Interrupt inputs
-    input  logic        irq_software_i,
-    input  logic        irq_timer_i,
-    input  logic        irq_external_i,
-    input  logic [14:0] irq_fast_i,
-    input  logic        irq_nm_i,       // non-maskeable interrupt
-
-    // Debug Interface
-    input  logic        debug_req_i,
-
-        // CPU Control Signals
-    input  logic        fetch_enable_i,
-    output logic        alert_minor_o,
-    output logic        alert_major_o,
-    output logic        core_sleep_o
+  // CPU Control Signals
+  input  logic        fetch_enable_i,
+  output logic        alert_minor_o,
+  output logic        alert_major_o,
+  output logic        core_sleep_o
 );
-import brq_pkg::*;
+import ibex_pkg::*;
 
-  logic rst_ni;
+  logic  rst_ni;
   assign rst_ni = reset;
   // Instruction interface (internal)
   logic        instr_req;
@@ -135,7 +130,7 @@ ibex_core #(
     .irq_nm_i       (irq_nm_i),       // non-maskeable interrupt
 
     // Debug Interface
-    .debug_req_i     (debug_req_i),
+    .debug_req_i    (debug_req_i),
 
     // RISC-V Formal Interface
     // Does not comply with the coding standards of _i/_o suffixes, but follows
@@ -148,14 +143,14 @@ ibex_core #(
     .rvfi_halt (),
     .rvfi_intr (),
     .rvfi_mode (),
-    .rvfi_ixl (),
+    .rvfi_ixl  (),
     .rvfi_rs1_addr (),
     .rvfi_rs2_addr (),
     .rvfi_rs3_addr (),
     .rvfi_rs1_rdata (),
     .rvfi_rs2_rdata (),
     .rvfi_rs3_rdata (),
-    .rvfi_rd_addr (),
+    .rvfi_rd_addr  (),
     .rvfi_rd_wdata (),
     .rvfi_pc_rdata (),
     .rvfi_pc_wdata (),
@@ -173,7 +168,7 @@ ibex_core #(
     .core_sleep_o (core_sleep_o)
 );
 
-tlul_host_adapter #(
+tlul_adapter_host #(
     .MAX_REQS(2)
 ) intr_interface (
     .clock (clock),
@@ -191,7 +186,7 @@ tlul_host_adapter #(
     .tl_h_c_d (tl_i_i)
 );
 
-tlul_host_adapter #(
+tlul_adapter_host #(
     .MAX_REQS (2)
 ) data_interface (
     .clock (clock),

@@ -1,6 +1,6 @@
 module data_mem
 (
-  input clock,
+  input clk_i,
   input rst_ni,
 
   // tl-ul insterface
@@ -17,22 +17,22 @@ module data_mem
   logic        rvalid; 
   logic [3:0]  data_we;
   
-  always_ff @(posedge clock) begin
+  always_ff @(posedge clk_i) begin
     if (!rst_ni) begin
       rvalid <= 1'b0;
-    end else if (we_i) begin
+    end else if (we) begin
       rvalid <= 1'b0;
     end else begin 
       rvalid <= req;
     end
   end
 
-  assign data_we[1:0] = (wmask_i[23:16] != 8'd0) ? 2'b11: 2'b00;
-  assign data_we[3:2] = (wmask_i[31:24] != 8'd0) ? 2'b11: 2'b00; 
+  assign data_we[1:0] = (wmask[23:16] != 8'd0) ? 2'b11: 2'b00;
+  assign data_we[3:2] = (wmask[31:24] != 8'd0) ? 2'b11: 2'b00; 
   
 DFFRAMD dccm (
 
-    .CLK    (clock  ),
+    .CLK    (clk_i  ),
     .EN     (req    ),   // chip enable
     .WE     (data_we),   // write mask
     .Di     (wdata  ),   // data input
@@ -49,7 +49,7 @@ tlul_sram_adapter #(
   .ErrOnRead    (0) 
 
 ) data_mem (
-    .clk_i    (clock       ),
+    .clk_i    (clk_i       ),
     .rst_ni   (rst_ni      ),
     .tl_i     (xbar_to_dccm),
     .tl_o     (dccm_to_xbar), 

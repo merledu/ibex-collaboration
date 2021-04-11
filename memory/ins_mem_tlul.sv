@@ -1,6 +1,6 @@
 module instr_mem_tlul
 (
-  input clock,
+  input clk_i,
   input rst_ni,
 
   // tl-ul insterface
@@ -18,7 +18,7 @@ module instr_mem_tlul
   logic [3:0]  data_we;
 
 
-  always_ff @(posedge clock) begin
+  always_ff @(posedge clk_i) begin
     if (!rst_ni) begin
       instr_valid <= 1'b0;
     end else if (we) begin
@@ -28,11 +28,8 @@ module instr_mem_tlul
     end
   end
 
-  assign data_we[1:0] = (wmask_i[23:16] != 8'd0) ? 2'b11: 2'b00;
-  assign data_we[3:2] = (wmask_i[31:24] != 8'd0) ? 2'b11: 2'b00; 
-
   DFFRAM inst_memory (
-    .CLK    (clock),  // system clock
+    .CLK    (clk_i),  // system clk_i
     .EN     (req),    // chip enable
     .WE     (we),     // write mask
     .DI     (wdata),  // data input
@@ -49,17 +46,17 @@ module instr_mem_tlul
     .ErrOnRead    (0)   // 1: Reads not allowed, automatically error  
 
   ) inst_mem (
-    .clk_i     (clock),
-    .rst_ni    (system_rst_ni),
+    .clk_i     (clk_i),
+    .rst_ni    (rst_ni),
     .tl_i      (xbar_to_iccm),
     .tl_o      (iccm_to_xbar), 
-    .req_o     (req                     ),
+    .req_o     (req),
     .gnt_i     (1'b1),
     .we_o      (),
-    .addr_o    (tlul_addr),
+    .addr_o    (addr),
     .wdata_o   (),
     .wmask_o   (),
-    .rdata_i   ((rst_ni) ? tlul_data: '0),
+    .rdata_i   ((rst_ni) ? rdata: '0),
     .rvalid_i  (instr_valid),
     .rerror_i  (2'b0)
   );
