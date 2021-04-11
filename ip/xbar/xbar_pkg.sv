@@ -10,6 +10,7 @@ package xbar_pkg;
   localparam logic [31:0] ADDR_SPACE_TSEN1 = 32'h 400d0000;
   localparam logic [31:0] ADDR_SPACE_TSEN2 = 32'h 400e0000;
   localparam logic [31:0] ADDR_SPACE_DAP   = 32'h 400f0000;
+  localparam logic [31:0] ADDR_SPACE_PLIC  = 32'h 40050000;
  
   localparam logic [31:0] ADDR_MASK_ICCM  = 32'h 0000ffff;
   localparam logic [31:0] ADDR_MASK_DCCM  = 32'h 0000ffff;
@@ -21,9 +22,10 @@ package xbar_pkg;
   localparam logic [31:0] ADDR_MASK_TSEN1 = 32'h 0000ffff;
   localparam logic [31:0] ADDR_MASK_TSEN2 = 32'h 0000ffff;
   localparam logic [31:0] ADDR_MASK_DAP   = 32'h 0000ffff;
+  localparam logic [31:0] ADDR_SPACE_PLIC = 32'h 0000ffff;
 
   localparam int N_HOST   = 2;
-  localparam int N_DEVICE = 10;
+  localparam int N_DEVICE = 11;
 
   typedef enum int {
     tl_iccm  = 0,
@@ -35,7 +37,8 @@ package xbar_pkg;
     tl_pll1  = 6,
     tl_tsen1 = 7,
     tl_tsen2 = 8,
-    tl_dap   = 9
+    tl_dap   = 9,
+    tl_plic  = 10
   } tl_device_e;
 
   typedef enum int {
